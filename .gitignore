@@ -1,0 +1,26 @@
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Python / backend
+backend/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/.env
+backend/*.sqlite3
+
+# Uploaded / saved files
+backend/uploaded_books/
+backend/saved_models/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE / Editor files
+.vscode/
+.idea/

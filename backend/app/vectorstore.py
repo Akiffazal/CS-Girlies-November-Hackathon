@@ -1,34 +1,50 @@
-# vectorstore.py
 import faiss
 import numpy as np
-import os
 import pickle
-from typing import List
+import os
+from app.embeddings import get_embedding
+from app.config import VECTORSTORE_PATH
 
-INDEX_DIR = os.getenv("DATA_DIR", "./data")
-os.makedirs(INDEX_DIR, exist_ok=True)
+class VectorStore:
+    def __init__(self):
+        self.index = None
+        self.texts = []
+        self.load()
 
-INDEX_PATH = os.path.join(INDEX_DIR, "faiss.index")
-META_PATH = os.path.join(INDEX_DIR, "meta.pkl")
+    def build(self, texts):
+        embeddings = [get_embedding(t) for t in texts]
+        dim = len(embeddings[0])
+        self.index = faiss.IndexFlatL2(dim)
+        self.index.add(np.array(embeddings, dtype="float32"))
+        self.texts = texts
+        self.save()
 
-def create_faiss_index(dim: int):
-    index = faiss.IndexFlatL2(dim)
-    return index
+    def save(self):
+        with open(VECTORSTORE_PATH + ".pkl", "wb") as f:
+            pickle.dump(self.texts, f)
+        faiss.write_index(self.index, VECTORSTORE_PATH)
 
-def save_index(index, meta):
-    faiss.write_index(index, INDEX_PATH)
-    with open(META_PATH, "wb") as f:
-        pickle.dump(meta, f)
+    def load(self):
+        if os.path.exists(VECTORSTORE_PATH) and os.path.exists(VECTORSTORE_PATH + ".pkl"):
+            self.index = faiss.read_index(VECTORSTORE_PATH)
+            with open(VECTORSTORE_PATH + ".pkl", "rb") as f:
+                self.texts = pickle.load(f)
 
-def load_index():
-    if not os.path.exists(INDEX_PATH) or not os.path.exists(META_PATH):
-        return None, None
-    index = faiss.read_index(INDEX_PATH)
-    with open(META_PATH, "rb") as f:
-        meta = pickle.load(f)
-    return index, meta
+    def query(self, query_text, top_k=4):
+        if self.index is None or len(self.texts) == 0:
+            return []
 
-def add_embeddings_to_index(index, embeddings: List[List[float]], metadata_list: List[dict]):
-    vecs = np.array(embeddings).astype('float32')
-    index.add(vecs)
-    return index
+        q_emb = np.array([get_embedding(query_text)], dtype='float32')
+        D, I = self.index.search(q_emb, top_k)
+        return [self.texts[i] for i in I[0]]
+
+
+# Global instance
+vectorstore = VectorStore()
+
+def save_chunks(text_chunks):
+    vectorstore.build(text_chunks)
+
+def search_similar_chunks(query):
+    results = vectorstore.query(query)
+    return "\n".join(results)

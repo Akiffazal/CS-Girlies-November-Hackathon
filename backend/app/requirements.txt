@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+aiofiles
+numpy
+pandas
+Pillow
+PyPDF2
+faiss-cpu
+openai
+PyMuPDF
+
