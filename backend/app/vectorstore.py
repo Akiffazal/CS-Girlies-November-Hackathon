@@ -33,11 +33,9 @@ class VectorStore:
     def query(self, query_text, top_k=4):
         if self.index is None or len(self.texts) == 0:
             return []
-
         q_emb = np.array([get_embedding(query_text)], dtype='float32')
         D, I = self.index.search(q_emb, top_k)
         return [self.texts[i] for i in I[0]]
-
 
 # Global instance
 vectorstore = VectorStore()
@@ -45,6 +43,7 @@ vectorstore = VectorStore()
 def save_chunks(text_chunks):
     vectorstore.build(text_chunks)
 
-def search_similar_chunks(query):
-    results = vectorstore.query(query)
-    return "\n".join(results)
+def search_similar_chunks(query, top_k=3):
+    """Return top-k most similar text chunks as a string"""
+    results = vectorstore.query(query, top_k)
+    return "\n\n".join(results)
