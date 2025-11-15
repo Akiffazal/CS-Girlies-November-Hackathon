@@ -3,7 +3,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Chat from './pages/Chat'
 
-export default function App(){
+export default function App() {
   return (
     <div className="container">
       <Navbar />
